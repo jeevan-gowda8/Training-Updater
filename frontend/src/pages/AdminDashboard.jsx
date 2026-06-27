@@ -110,6 +110,24 @@ export default function AdminDashboard({ username, onLogout }) {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const handleGenerateAISummary = async () => {
+    if (!reportData || !reportData.updates || reportData.updates.length === 0) return;
+    setIsGeneratingAI(true);
+    setError("");
+    try {
+      const res = await api.generateAISummary(reportData.updates);
+      setReportSummary(res.summary);
+      setSuccess("AI Summary generated successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.message || "Failed to generate AI summary");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -633,7 +651,18 @@ export default function AdminDashboard({ username, onLogout }) {
 
                       {printLayoutFormat === "summary" && (
                         <>
-                          <h3>Consolidated Details of the Training</h3>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "10px" }}>
+                            <h3 style={{ margin: 0 }}>Consolidated Details of the Training</h3>
+                            <button
+                              type="button"
+                              className="glass-button"
+                              onClick={handleGenerateAISummary}
+                              disabled={isGeneratingAI || !reportData.updates || reportData.updates.length === 0}
+                              style={{ padding: "6px 12px", fontSize: "0.82rem", gap: "4px" }}
+                            >
+                              {isGeneratingAI ? "Generating..." : "✨ Auto-Generate with AI"}
+                            </button>
+                          </div>
                           <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "8px" }}>
                             Review and edit the training summary to be printed on the single page.
                           </p>

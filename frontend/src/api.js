@@ -178,6 +178,32 @@ export const api = {
     return await res.json();
   },
 
+  async generateAISummary(updates) {
+    const res = await fetch(`${API_BASE}/reports/ai-summary`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ updates }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Failed to generate AI summary");
+    }
+    return await res.json();
+  },
+
+  async shortenDailyUpdate(text) {
+    const res = await fetch(`${API_BASE}/updates/ai-shorten`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Failed to shorten update");
+    }
+    return await res.json();
+  },
+
   getFileUrl(urlPath) {
     if (!urlPath) return null;
     return `${API_BASE}${urlPath}`;

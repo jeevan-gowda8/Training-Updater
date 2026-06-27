@@ -103,6 +103,41 @@ export default function StudentDashboard({ username, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
 
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isShorteningAI, setIsShorteningAI] = useState(false);
+
+  const handleGenerateAISummary = async () => {
+    if (!reportData || !reportData.updates || reportData.updates.length === 0) return;
+    setIsGeneratingAI(true);
+    setError("");
+    try {
+      const res = await api.generateAISummary(reportData.updates);
+      setReportSummary(res.summary);
+      setSuccess("AI Summary generated successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.message || "Failed to generate AI summary");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  const handleShortenDescription = async () => {
+    if (!description || description.trim().length === 0) return;
+    setIsShorteningAI(true);
+    setError("");
+    try {
+      const res = await api.shortenDailyUpdate(description);
+      setDescription(res.short_text);
+      setSuccess("Daily log optimized and shortened with AI!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.message || "Failed to shorten update with AI");
+    } finally {
+      setIsShorteningAI(false);
+    }
+  };
+
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -479,7 +514,19 @@ export default function StudentDashboard({ username, onLogout }) {
                 </div>
 
                 <div className="form-group">
-                  <label>Detailed Description</label>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "10px" }}>
+                    <label style={{ margin: 0 }}>Detailed Description</label>
+                    <button
+                      type="button"
+                      className="glass-button"
+                      onClick={handleShortenDescription}
+                      disabled={isShorteningAI || !description || description.trim().length === 0}
+                      style={{ padding: "4px 10px", fontSize: "0.8rem", gap: "4px" }}
+                      title="AI will optimize and shorten your daily log details to be clean & professional."
+                    >
+                      {isShorteningAI ? "Shortening..." : "✨ Shorten with AI"}
+                    </button>
+                  </div>
                   <textarea 
                     className="glass-input"
                     value={description}
@@ -790,7 +837,18 @@ export default function StudentDashboard({ username, onLogout }) {
 
                       {printLayoutFormat === "summary" && (
                         <>
-                          <h3>Consolidated Details of the Training</h3>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "10px" }}>
+                            <h3 style={{ margin: 0 }}>Consolidated Details of the Training</h3>
+                            <button
+                              type="button"
+                              className="glass-button"
+                              onClick={handleGenerateAISummary}
+                              disabled={isGeneratingAI || !reportData.updates || reportData.updates.length === 0}
+                              style={{ padding: "6px 12px", fontSize: "0.82rem", gap: "4px" }}
+                            >
+                              {isGeneratingAI ? "Generating..." : "✨ Auto-Generate with AI"}
+                            </button>
+                          </div>
                           <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginBottom: "8px" }}>
                             Review and edit the training summary to be printed on the single page.
                           </p>

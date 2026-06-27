@@ -643,6 +643,66 @@ Provide ONLY the summary text (max 4 bullet points). Do not include introductory
         print(f"AI summary request failed: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to compile AI summary: {str(e)}")
 
+@app.post("/updates/ai-shorten", response_model=schemas.AIShortenResponse)
+async def generate_ai_shorten(
+    payload: schemas.AIShortenRequest,
+    current_user: models.User = Depends(get_current_user)
+):
+    if not payload.text or len(payload.text.strip()) == 0:
+        return schemas.AIShortenResponse(short_text="")
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="Gemini API Key is not set. Please set the GEMINI_API_KEY environment variable in your Render settings."
+        )
+    
+    prompt = f"""
+You are an expert technical editor. Your job is to take a student's daily training log description and rewrite it to be short, professional, and concise.
+
+Make it clean, remove conversational words, fix grammar, and summarize it into 1-2 concise sentences (under 30 words).
+Ensure it is written in a professional, active business voice (e.g., "Learned X and implemented Y" or "Configured database schemas and optimized index queries").
+
+Student description:
+{payload.text}
+
+Provide ONLY the rewritten description. Do not include conversational remarks, intro, or quotes.
+"""
+
+    headers = {
+        "Content-Type": "application/json",
+    }
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
+    
+    data = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ]
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(url, headers=headers, json=data)
+            if response.status_code != 200:
+                print(f"Gemini API error ({response.status_code}): {response.text}")
+                raise HTTPException(status_code=500, detail="Gemini AI service failed to respond.")
+            
+            result = response.json()
+            candidates = result.get("candidates", [])
+            if candidates:
+                text_content = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                return schemas.AIShortenResponse(short_text=text_content.strip())
+            else:
+                raise HTTPException(status_code=500, detail="Gemini AI returned empty candidates.")
+    except Exception as e:
+        print(f"AI shorten request failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to shorten text: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn

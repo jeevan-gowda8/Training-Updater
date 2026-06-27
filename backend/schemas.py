@@ -90,3 +90,10 @@ class AISummaryRequest(BaseModel):
 
 class AISummaryResponse(BaseModel):
     summary: str
+
+# --- AI Shorten Schemas ---
+class AIShortenRequest(BaseModel):
+    text: str
+
+class AIShortenResponse(BaseModel):
+    short_text: str
