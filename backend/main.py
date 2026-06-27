@@ -9,6 +9,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, File, Form, UploadF
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+import httpx
 
 import models
 import schemas
@@ -569,6 +570,79 @@ def get_monthly_report(
         updates=update_responses,
         completion_rate=completion_rate
     )
+
+@app.post("/reports/ai-summary", response_model=schemas.AISummaryResponse)
+async def generate_ai_summary(
+    payload: schemas.AISummaryRequest,
+    current_user: models.User = Depends(get_current_user)
+):
+    if not payload.updates:
+        return schemas.AISummaryResponse(summary="No updates logged for this month.")
+
+    # Format updates into a clean prompt text
+    updates_text = ""
+    for idx, u in enumerate(payload.updates):
+        updates_text += f"{idx+1}. [{u.date}] Domain: {u.domain_name} | Task: {u.task_title}\n"
+        if u.description:
+            # Clean description markdown tags for cleaner prompt
+            clean_desc = u.description.replace("\r", "").replace("\n", " ").strip()
+            updates_text += f"   Details: {clean_desc}\n"
+        updates_text += "\n"
+
+    # Read from env
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=500,
+            detail="Gemini API Key is not set. Please set the GEMINI_API_KEY environment variable in your Render settings."
+        )
+    
+    prompt = f"""
+You are an expert training manager tasked with generating a professional Consolidated Monthly Training Report summary.
+Below is a list of daily updates logged by the student for this month.
+
+Analyze these logs and generate an extremely brief, high-level consolidated summary of accomplishments (maximum 3-4 short bullet points in total, under 100 words).
+Keep it very concise, professional, and suitable to print on a single-page report. Do not repeat daily entries; group them into broad accomplishments.
+
+Daily training updates:
+{updates_text}
+
+Provide ONLY the summary text (max 4 bullet points). Do not include introductory or concluding remarks.
+"""
+
+    headers = {
+        "Content-Type": "application/json",
+    }
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
+    
+    data = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ]
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, headers=headers, json=data)
+            if response.status_code != 200:
+                print(f"Gemini API error ({response.status_code}): {response.text}")
+                raise HTTPException(status_code=500, detail="Gemini AI service failed to respond.")
+            
+            result = response.json()
+            candidates = result.get("candidates", [])
+            if candidates:
+                text_content = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                return schemas.AISummaryResponse(summary=text_content.strip())
+            else:
+                raise HTTPException(status_code=500, detail="Gemini AI returned empty candidates.")
+    except Exception as e:
+        print(f"AI summary request failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to compile AI summary: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn
