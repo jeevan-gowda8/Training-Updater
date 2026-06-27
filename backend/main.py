@@ -67,6 +67,7 @@ if cors_origins_env:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex="https://.*",  # Automatically allows all secure production urls (Vercel, etc.)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
