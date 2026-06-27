@@ -83,3 +83,10 @@ class MonthlyReportResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --- AI Summary Schemas ---
+class AISummaryRequest(BaseModel):
+    updates: List[DailyUpdateResponse]
+
+class AISummaryResponse(BaseModel):
+    summary: str
