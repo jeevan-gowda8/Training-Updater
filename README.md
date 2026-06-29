@@ -2,6 +2,8 @@
 
 Training Tracker is a modern, high-performance web application designed for students and interns to track daily training activities, visualize learning focus in 3D, and instantly compile print-ready monthly progress reports with the power of Google Gemini AI.
 
+**Live Website**: [training-updater.vercel.app](https://training-updater.vercel.app)
+
 ---
 
 ## 🚀 Key Features
