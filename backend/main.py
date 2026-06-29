@@ -627,7 +627,7 @@ Provide ONLY the summary text (max 4 bullet points). Do not include introductory
             response = await client.post(url, headers=headers, json=data)
             if response.status_code != 200:
                 print(f"Gemini API error ({response.status_code}): {response.text}")
-                raise HTTPException(status_code=500, detail="Gemini AI service failed to respond.")
+                raise HTTPException(status_code=500, detail=f"Gemini API error ({response.status_code}): {response.text}")
             
             result = response.json()
             candidates = result.get("candidates", [])
@@ -684,7 +684,7 @@ Provide ONLY the rewritten description. Do not include conversational remarks, i
             response = await client.post(url, headers=headers, json=data)
             if response.status_code != 200:
                 print(f"Gemini API error ({response.status_code}): {response.text}")
-                raise HTTPException(status_code=500, detail="Gemini AI service failed to respond.")
+                raise HTTPException(status_code=500, detail=f"Gemini API error ({response.status_code}): {response.text}")
             
             result = response.json()
             candidates = result.get("candidates", [])
