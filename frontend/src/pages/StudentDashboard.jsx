@@ -648,48 +648,41 @@ export default function StudentDashboard({ username, onLogout }) {
                       <p className="card-desc">{update.description}</p>
                       
                       {update.media_url ? (
-                        <div className="card-media-wrapper" style={{ marginTop: "10px" }}>
-                          {update.media_type === "image" ? (
-                            <img 
-                              src={api.getFileUrl(update.media_url)} 
-                              alt={update.task_title} 
-                              loading="lazy"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                                const fallback = e.target.nextSibling;
-                                if (fallback) fallback.style.display = "block";
-                              }}
-                            />
-                          ) : (
-                            <video 
-                              src={api.getFileUrl(update.media_url)} 
-                              controls 
-                              preload="metadata" 
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                                const fallback = e.target.nextSibling;
-                                if (fallback) fallback.style.display = "block";
-                              }}
-                            />
-                          )}
-                          <div style={{ display: "none", color: "var(--text-secondary)", fontSize: "0.85rem", padding: "15px", textAlign: "center", width: "100%" }}>
+                        <>
+                          <div className="card-media-wrapper" style={{ marginTop: "10px" }}>
+                            {update.media_type === "image" ? (
+                              <img 
+                                src={api.getFileUrl(update.media_url)} 
+                                alt={update.task_title} 
+                                loading="lazy"
+                                onError={(e) => {
+                                  const wrapper = e.target.closest(".card-media-wrapper");
+                                  if (wrapper) wrapper.style.display = "none";
+                                  const fallback = wrapper.nextSibling;
+                                  if (fallback) fallback.style.display = "block";
+                                }}
+                              />
+                            ) : (
+                              <video 
+                                src={api.getFileUrl(update.media_url)} 
+                                controls 
+                                preload="metadata" 
+                                onError={(e) => {
+                                  const wrapper = e.target.closest(".card-media-wrapper");
+                                  if (wrapper) wrapper.style.display = "none";
+                                  const fallback = wrapper.nextSibling;
+                                  if (fallback) fallback.style.display = "block";
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div style={{ display: "none", color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "8px", fontStyle: "italic" }}>
                             📷 Image not uploaded
                           </div>
-                        </div>
+                        </>
                       ) : (
-                        <div style={{ 
-                          marginTop: "10px",
-                          borderRadius: "8px", 
-                          border: "1px dashed rgba(0, 0, 0, 0.1)", 
-                          background: "rgba(0, 0, 0, 0.03)", 
-                          padding: "10px 15px", 
-                          display: "flex", 
-                          alignItems: "center", 
-                          gap: "8px", 
-                          color: "var(--text-secondary)", 
-                          fontSize: "0.85rem" 
-                        }}>
-                          <span>📷 Image not uploaded</span>
+                        <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "8px", fontStyle: "italic" }}>
+                          📷 Image not uploaded
                         </div>
                       )}
                       
