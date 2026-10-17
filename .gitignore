@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+
+# Python / Bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+backend/__pycache__/
+
+# Database & Uploads
+*.db
+training_tracker.db
+uploads/
+
+# Environment / Local settings
+.env
+.env.local
+.DS_Store
+Thumbs.db
